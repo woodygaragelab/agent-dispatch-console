@@ -81,7 +81,7 @@ function Ticket({ ticket, onAdvance, onStart, expanded, onToggle }) {
   return (
     <div
       onClick={() => onToggle(ticket.id)}
-      className="group cursor-pointer border-b border-[#2A2F38] transition-colors hover:bg-[#1A1E25]"
+      className="group cursor-pointer border-b border-[#3A404A] transition-colors hover:bg-[#2C3039]"
       style={{ animation: ticket.fresh ? "dropIn 420ms cubic-bezier(.2,.8,.2,1)" : "none" }}
     >
       <div className="flex items-center gap-3 px-5 py-4">
@@ -96,7 +96,7 @@ function Ticket({ ticket, onAdvance, onStart, expanded, onToggle }) {
             <span className="text-[32px] font-bold text-[#E4E6EB]">{ticket.agentName}</span>
             <span className="font-mono text-[11px] text-[#5C6270]">#{ticket.id}</span>
             {ticket.clientId && (
-              <span className="rounded bg-[#2A2F38] px-1.5 py-0.5 font-mono text-[10px] text-[#9AA0AC]">
+              <span className="rounded bg-[#3A404A] px-1.5 py-0.5 font-mono text-[10px] text-[#9AA0AC]">
                 {CLIENTS.find((c) => c.id === ticket.clientId)?.short}
               </span>
             )}
@@ -116,7 +116,7 @@ function Ticket({ ticket, onAdvance, onStart, expanded, onToggle }) {
         />
       </div>
       {expanded && (
-        <div className="mx-5 mb-3.5 rounded-md border border-[#2A2F38] bg-[#0F1216] px-4 py-3.5 text-[12px]">
+        <div className="mx-5 mb-3.5 rounded-md border border-[#3A404A] bg-[#1C2026] px-4 py-3.5 text-[12px]">
           {ticket.status === "queued" && (
             <button
               onClick={(e) => {
@@ -220,7 +220,7 @@ export default function AgentDispatchConsole() {
   const visibleTickets = tickets.filter((t) => t.clientId === clientFilter);
 
   return (
-    <div className="min-h-screen w-full bg-[#14171C] text-[#E4E6EB]" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen w-full bg-[#242830] text-[#E4E6EB]" style={{ fontFamily: "'Inter', sans-serif" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
         @keyframes dropIn {
@@ -229,11 +229,11 @@ export default function AgentDispatchConsole() {
         }
         textarea::placeholder { color: #5C6270; }
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-thumb { background: #2A2F38; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #3A404A; border-radius: 4px; }
       `}</style>
 
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-[#2A2F38] px-8 py-5">
+      <header className="flex items-center justify-between border-b border-[#3A404A] px-8 py-5">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[#E8A33D]/15">
             <Zap size={16} className="text-[#E8A33D]" />
@@ -253,8 +253,8 @@ export default function AgentDispatchConsole() {
 
       <div className="mx-auto max-w-3xl px-8 py-8">
         {/* Queue */}
-        <div className="rounded-xl border border-[#2A2F38] bg-[#171A20]">
-          <div className="border-b border-[#2A2F38] px-5 py-3">
+        <div className="rounded-xl border border-[#3A404A] bg-[#282C34]">
+          <div className="border-b border-[#3A404A] px-5 py-3">
             <span className="mb-2 block text-[10.5px] font-medium tracking-wide text-[#5C6270]">クライアント</span>
             <div className="flex flex-wrap gap-1.5">
               {CLIENTS.map((c) => (
@@ -263,7 +263,7 @@ export default function AgentDispatchConsole() {
                   onClick={() => setClientFilter(c.id)}
                   className="rounded-full border px-2.5 py-1 font-mono transition-all"
                   style={{
-                    borderColor: clientFilter === c.id ? "#E8A33D" : "#2A2F38",
+                    borderColor: clientFilter === c.id ? "#E8A33D" : "#3A404A",
                     background: clientFilter === c.id ? "rgba(232,163,61,0.12)" : "transparent",
                     color: clientFilter === c.id ? "#E8A33D" : "#8A8F98",
                     fontSize: clientFilter === c.id ? "15px" : "11px",
@@ -276,7 +276,7 @@ export default function AgentDispatchConsole() {
               ))}
             </div>
           </div>
-          <div className="flex items-center justify-between border-b border-[#2A2F38] px-5 py-3.5">
+          <div className="flex items-center justify-between border-b border-[#3A404A] px-5 py-3.5">
             <span style={{ fontFamily: "'Space Grotesk', sans-serif" }} className="text-[13px] font-semibold">
               エージェントへの指示
             </span>
