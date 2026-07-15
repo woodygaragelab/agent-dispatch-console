@@ -9,11 +9,11 @@ const AGENTS = [
 ];
 
 const CLIENTS = [
-  { id: "jkl", short: "JKL", full: "JAKALULU" },
-  { id: "jlr", short: "JLR", full: "JLAB-RPA" },
-  { id: "max", short: "MAX", full: "MaximoPJ" },
-  { id: "amr", short: "AMR", full: "AMORPHOUS" },
-  { id: "ikk", short: "IKK", full: "Ikkoh" },
+  { id: "jkl", short: "JKL", full: "JAKALULU株式会社" },
+  { id: "jlr", short: "JLR", full: "JLAB-RPA研究所" },
+  { id: "max", short: "MAX", full: "Maximo事業所" },
+  { id: "amr", short: "AMR", full: "AMORPHOUS事務所" },
+  { id: "ikk", short: "IKK", full: "Ikkoh株式会社" },
 ];
 
 const STATUS_STYLES = {
