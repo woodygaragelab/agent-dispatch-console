@@ -5,7 +5,7 @@ const AGENTS = [
   { id: "scout", name: "受領", role: "情報収集・調査", example: "取引先から届いた見積書・請求書PDFをメールから取得し、案件フォルダに格納する" },
   { id: "archivist", name: "分類", role: "文書整理・分類", example: "receiptフォルダの新しい領収書画像を勘定科目ごとにリネーム・分類する" },
   { id: "courier", name: "会計", role: "外部連携・送信", example: "領収書リストから仕訳データに変換する" },
-  { id: "auditor", name: "チェック", role: "検証・照合", example: "7月分の仕訳データの科目コードをマスタと照合する" },
+  { id: "auditor", name: "チェック", role: "検証・照合", example: "仕訳データの科目コードをマスタと照合する" },
 ];
 
 const CLIENTS = [
