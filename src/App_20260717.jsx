@@ -1,12 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Clock, CheckCircle2, XCircle, Loader2, ChevronDown, Zap, Play, RotateCw, ExternalLink } from "lucide-react";
-
-// receipt-ocr-filelist (AgentCore) 経由で実処理する対象エージェント。
-// 他のエージェントは未接続のため、従来どおりのモック動作のままにしておく。
-const LIVE_AGENT_IDS = ["archivist"];
-const API_BASE = "https://ljaulscga3.execute-api.ap-northeast-1.amazonaws.com";
-const POLL_INTERVAL_MS = 3000;
-const MAX_POLL_ATTEMPTS = 100;
 
 const AGENTS = [
   { id: "scout", name: "受領", role: "情報収集・調査", example: "取引先から届いた見積書・請求書PDFをメールから取得し、案件フォルダに格納する" },
@@ -74,7 +67,16 @@ const INITIAL_TICKETS = CLIENTS.flatMap((c, ci) =>
   })
 );
 
-function Ticket({ ticket, onStart, expanded, onToggle }) {
+function useTicketClock(ticket, onAdvance) {
+  useEffect(() => {
+    if (ticket.status !== "running") return;
+    const t = setTimeout(() => onAdvance(ticket.id), 2200 + Math.random() * 1600);
+    return () => clearTimeout(t);
+  }, [ticket.status, ticket.id]);
+}
+
+function Ticket({ ticket, onAdvance, onStart, expanded, onToggle }) {
+  useTicketClock(ticket, onAdvance);
   const s = STATUS_STYLES[ticket.status];
   const Icon = s.icon;
   return (
@@ -163,13 +165,6 @@ function Ticket({ ticket, onStart, expanded, onToggle }) {
               <span className="font-mono text-[#374151]">{ticket.endTime || "—"}</span>
             </div>
 
-            {ticket.result && (
-              <div className="flex items-start gap-3">
-                <span className="shrink-0 text-[#8A93A3]" style={{ width: "84px" }}>実行結果</span>
-                <span className="whitespace-pre-wrap break-words text-[#374151]">{ticket.result}</span>
-              </div>
-            )}
-
             <div className="flex items-start gap-3">
               <span className="shrink-0 text-[#8A93A3]" style={{ width: "84px" }}>入力フォルダ</span>
               <a
@@ -209,83 +204,18 @@ export default function AgentDispatchConsole() {
   const [tickets, setTickets] = useState(INITIAL_TICKETS);
   const [expandedId, setExpandedId] = useState(null);
 
-  // LIVE_AGENT_IDS に含まれるエージェントのみ、実際にAgentCoreへ処理を依頼する。
-  // それ以外は従来どおりのモック挙動(ランダムに完了/エラーへ遷移)のまま。
-  const pollJob = (id, jobId, attempt = 0) => {
-    if (attempt >= MAX_POLL_ATTEMPTS) {
-      setTickets((prev) =>
-        prev.map((t) =>
-          t.id === id ? { ...t, status: "error", result: "応答がタイムアウトしました", endTime: formatNow() } : t
-        )
-      );
-      return;
-    }
-    setTimeout(async () => {
-      try {
-        const res = await fetch(`${API_BASE}/jobs/${jobId}`);
-        if (!res.ok) throw new Error(`status ${res.status}`);
-        const job = await res.json();
-
-        if (job.status === "processing") {
-          pollJob(id, jobId, attempt + 1);
-          return;
-        }
-        setTickets((prev) =>
-          prev.map((t) =>
-            t.id === id
-              ? {
-                  ...t,
-                  status: job.status === "completed" ? "done" : "error",
-                  result: job.result || job.error || "",
-                  endTime: formatNow(),
-                }
-              : t
-          )
-        );
-      } catch (err) {
-        setTickets((prev) =>
-          prev.map((t) => (t.id === id ? { ...t, status: "error", result: String(err), endTime: formatNow() } : t))
-        );
-      }
-    }, POLL_INTERVAL_MS);
-  };
-
-  const startLive = async (id, ticket) => {
-    const client = CLIENTS.find((c) => c.id === ticket.clientId);
-    const prompt = `${client?.short}の領収書を整理して`;
-    try {
-      const res = await fetch(`${API_BASE}/jobs`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-      });
-      if (!res.ok) throw new Error(`submit failed (${res.status})`);
-      const { job_id } = await res.json();
-      pollJob(id, job_id);
-    } catch (err) {
-      setTickets((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, status: "error", result: String(err), endTime: formatNow() } : t))
-      );
-    }
+  const advance = (id) => {
+    setTickets((prev) =>
+      prev.map((t) =>
+        t.id === id ? { ...t, status: Math.random() > 0.15 ? "done" : "error", endTime: formatNow() } : t
+      )
+    );
   };
 
   const start = (id) => {
-    const ticket = tickets.find((t) => t.id === id);
     setTickets((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, status: "running", startTime: formatNow(), endTime: null, result: null } : t))
+      prev.map((t) => (t.id === id ? { ...t, status: "running", startTime: formatNow(), endTime: null } : t))
     );
-    if (ticket && LIVE_AGENT_IDS.includes(ticket.agentId)) {
-      startLive(id, ticket);
-    } else {
-      // 未接続のエージェントは、これまでどおりのモック(ランダムに完了/エラー)
-      setTimeout(() => {
-        setTickets((prev) =>
-          prev.map((t) =>
-            t.id === id ? { ...t, status: Math.random() > 0.15 ? "done" : "error", endTime: formatNow() } : t
-          )
-        );
-      }, 2200 + Math.random() * 1600);
-    }
   };
 
   const visibleTickets = tickets.filter((t) => t.clientId === clientFilter);
@@ -358,6 +288,7 @@ export default function AgentDispatchConsole() {
               <Ticket
                 key={t.id}
                 ticket={t}
+                onAdvance={advance}
                 onStart={start}
                 expanded={expandedId === t.id}
                 onToggle={(id) => setExpandedId((prev) => (prev === id ? null : id))}
