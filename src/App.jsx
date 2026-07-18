@@ -31,8 +31,6 @@ const STATUS_STYLES = {
   error: { label: "エラー", color: "#D4634A", bg: "rgba(212,99,74,0.14)", icon: XCircle },
 };
 
-const STATUS_CYCLE = ["done", "running", "error", "queued"];
-
 const pad2 = (n) => String(n).padStart(2, "0");
 const formatNow = () => {
   const d = new Date();
@@ -50,14 +48,9 @@ const folderPair = () => ({
 
 const INITIAL_TICKETS = CLIENTS.flatMap((c, ci) =>
   AGENTS.map((a, ai) => {
-    const status = STATUS_CYCLE[(ci + ai) % STATUS_CYCLE.length];
-    const startH = 9 + ((ci + ai) % 6);
-    const startM = (ai * 15) % 60;
-    const startTime = status === "queued" ? null : `${pad2(startH)}:${pad2(startM)}`;
-    const endTime =
-      status === "done" || status === "error"
-        ? `${pad2(startH + (ai % 2 === 0 ? 0 : 1))}:${pad2((startM + 20) % 60)}`
-        : null;
+    const status = "queued";
+    const startTime = null;
+    const endTime = null;
     return {
       id: String(150 + ci * AGENTS.length + ai).padStart(4, "0"),
       agentId: a.id,
