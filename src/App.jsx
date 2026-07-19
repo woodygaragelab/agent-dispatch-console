@@ -40,8 +40,8 @@ const INPUT_FOLDER_URL = "https://drive.google.com/drive/folders/12RgXCZ9MndybR1
 const OUTPUT_FOLDER_URL = "https://drive.google.com/drive/folders/1VhpfUW2Dr202xmYEEPUjhQlwWQS94iqh?usp=drive_link";
 
 const folderPair = () => ({
-  inputFolder: "IKK/receipt",
-  outputFolder: "IKK/renamed",
+  inputFolder: "/receipt",
+  outputFolder: "/renamed",
   inputFolderUrl: INPUT_FOLDER_URL,
   outputFolderUrl: OUTPUT_FOLDER_URL,
 });
