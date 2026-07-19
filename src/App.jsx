@@ -36,8 +36,8 @@ const formatNow = () => {
   const d = new Date();
   return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 };
-const INPUT_FOLDER_URL = "https://drive.google.com/drive/folders/12RgXCZ9MndybR17FcMn7MGDA9J9lP21w?usp=drive_link";
-const OUTPUT_FOLDER_URL = "https://drive.google.com/drive/folders/1VhpfUW2Dr202xmYEEPUjhQlwWQS94iqh?usp=drive_link";
+const INPUT_FOLDER_URL = "https://drive.google.com/drive/folders/1w6R9LKeVXb3rfPxKuuqzuzVPwrHATibQ?usp=drive_link";
+const OUTPUT_FOLDER_URL = "https://drive.google.com/drive/folders/1L-j-4NYgzNy5kadlmCaJY4g_0K8BMWeE?usp=drive_link";
 
 const folderPair = () => ({
   inputFolder: "/receipt",
