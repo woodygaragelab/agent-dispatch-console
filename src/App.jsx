@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Clock, CheckCircle2, XCircle, Loader2, ChevronDown, Zap, Play, RotateCw, ExternalLink } from "lucide-react";
 
 // receipt-ocr-filelist (AgentCore) 経由で実処理する対象エージェント。
@@ -16,14 +16,6 @@ const AGENTS = [
   { id: "pinger", name: "疎通確認", role: "接続確認・監視", example: "会計システムAPIへの接続状態を確認し、応答時間を記録する" },
 ];
 
-const CLIENTS = [
-  { id: "jkl", short: "JKL", full: "JAKALULU株式会社" },
-  { id: "jlr", short: "JLR", full: "JLAB-RPA研究所" },
-  { id: "max", short: "MAX", full: "Maximo事業所" },
-  { id: "amr", short: "AMR", full: "AMORPHOUS事務所" },
-  { id: "ikk", short: "IKK", full: "Ikkoh株式会社" },
-];
-
 const STATUS_STYLES = {
   queued: { label: "待機中", color: "#6B7280", bg: "rgba(138,143,152,0.12)", icon: Clock },
   running: { label: "実行中", color: "#E8A33D", bg: "rgba(232,163,61,0.14)", icon: Loader2 },
@@ -36,36 +28,36 @@ const formatNow = () => {
   const d = new Date();
   return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 };
-const INPUT_FOLDER_URL = "https://drive.google.com/drive/folders/1w6R9LKeVXb3rfPxKuuqzuzVPwrHATibQ?usp=drive_link";
-const OUTPUT_FOLDER_URL = "https://drive.google.com/drive/folders/1L-j-4NYgzNy5kadlmCaJY4g_0K8BMWeE?usp=drive_link";
+// 関与先(案件)とDriveフォルダIDのマスタは、DynamoDB (receipt-agent-clients
+// テーブル) を GET /clients で公開しているAPIから取得する。同じAPIを
+// receipt-ocr-filelistスキルのSKILL.mdも参照しており、マスタをこのファイルに
+// 直書きしない(1か所で管理するため。詳細は receipt-agent-clients-api/ 参照)。
+const CLIENTS_ENDPOINT = `${API_BASE}/clients`;
 
-const folderPair = () => ({
-  inputFolder: "/receipt",
-  outputFolder: "/renamed",
-  inputFolderUrl: INPUT_FOLDER_URL,
-  outputFolderUrl: OUTPUT_FOLDER_URL,
-});
+const driveUrl = (folderId) =>
+  folderId ? `https://drive.google.com/drive/folders/${folderId}?usp=drive_link` : null;
 
-const INITIAL_TICKETS = CLIENTS.flatMap((c, ci) =>
-  AGENTS.map((a, ai) => {
-    const status = "queued";
-    const startTime = null;
-    const endTime = null;
-    return {
+const buildTickets = (clients) =>
+  clients.flatMap((c, ci) =>
+    AGENTS.map((a, ai) => ({
       id: String(150 + ci * AGENTS.length + ai).padStart(4, "0"),
       agentId: a.id,
       agentName: a.name,
       agentRole: a.role,
-      clientId: c.id,
+      clientId: c.code.toLowerCase(),
+      clientShort: c.code,
+      clientFull: c.fullName,
       instruction: a.example,
-      status,
-      startTime,
-      endTime,
-      ...folderPair(c, a),
+      status: "queued",
+      startTime: null,
+      endTime: null,
+      inputFolder: "/receipt",
+      outputFolder: "/renamed",
+      inputFolderUrl: driveUrl(c.receiptFolderId),
+      outputFolderUrl: driveUrl(c.renamedFolderId),
       fresh: false,
-    };
-  })
-);
+    }))
+  );
 
 function Ticket({ ticket, onStart, expanded, onToggle }) {
   const s = STATUS_STYLES[ticket.status];
@@ -87,9 +79,9 @@ function Ticket({ ticket, onStart, expanded, onToggle }) {
           <div className="flex items-baseline gap-2">
             <span className="text-[32px] font-bold text-[#1F2430]">{ticket.agentName}</span>
             <span className="font-mono text-[11px] text-[#8A93A3]">#{ticket.id}</span>
-            {ticket.clientId && (
+            {ticket.clientShort && (
               <span className="rounded bg-[#E2E4E9] px-1.5 py-0.5 font-mono text-[10px] text-[#6B7280]">
-                {CLIENTS.find((c) => c.id === ticket.clientId)?.short}
+                {ticket.clientShort}
               </span>
             )}
           </div>
@@ -165,30 +157,38 @@ function Ticket({ ticket, onStart, expanded, onToggle }) {
 
             <div className="flex items-start gap-3">
               <span className="shrink-0 text-[#8A93A3]" style={{ width: "84px" }}>入力フォルダ</span>
-              <a
-                href={ticket.inputFolderUrl}
-                target="_blank"
-                rel="noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1 break-all font-mono text-[#2563EB] underline decoration-[#2563EB]/40 underline-offset-2 hover:text-[#1D4ED8]"
-              >
-                {ticket.inputFolder}
-                <ExternalLink size={11} className="shrink-0" />
-              </a>
+              {ticket.inputFolderUrl ? (
+                <a
+                  href={ticket.inputFolderUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1 break-all font-mono text-[#2563EB] underline decoration-[#2563EB]/40 underline-offset-2 hover:text-[#1D4ED8]"
+                >
+                  {ticket.inputFolder}
+                  <ExternalLink size={11} className="shrink-0" />
+                </a>
+              ) : (
+                <span className="font-mono text-[#8A93A3]">未設定</span>
+              )}
             </div>
 
             <div className="flex items-start gap-3">
               <span className="shrink-0 text-[#8A93A3]" style={{ width: "84px" }}>出力フォルダ</span>
-              <a
-                href={ticket.outputFolderUrl}
-                target="_blank"
-                rel="noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1 break-all font-mono text-[#2563EB] underline decoration-[#2563EB]/40 underline-offset-2 hover:text-[#1D4ED8]"
-              >
-                {ticket.outputFolder}
-                <ExternalLink size={11} className="shrink-0" />
-              </a>
+              {ticket.outputFolderUrl ? (
+                <a
+                  href={ticket.outputFolderUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1 break-all font-mono text-[#2563EB] underline decoration-[#2563EB]/40 underline-offset-2 hover:text-[#1D4ED8]"
+                >
+                  {ticket.outputFolder}
+                  <ExternalLink size={11} className="shrink-0" />
+                </a>
+              ) : (
+                <span className="font-mono text-[#8A93A3]">未設定</span>
+              )}
             </div>
           </div>
         </div>
@@ -198,9 +198,33 @@ function Ticket({ ticket, onStart, expanded, onToggle }) {
 }
 
 export default function AgentDispatchConsole() {
-  const [clientFilter, setClientFilter] = useState(CLIENTS[0].id);
-  const [tickets, setTickets] = useState(INITIAL_TICKETS);
+  const [clients, setClients] = useState([]);
+  const [clientsStatus, setClientsStatus] = useState("loading"); // loading | ready | error
+  const [clientFilter, setClientFilter] = useState(null);
+  const [tickets, setTickets] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(CLIENTS_ENDPOINT)
+      .then((res) => {
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        if (cancelled) return;
+        setClients(data);
+        setTickets(buildTickets(data));
+        setClientFilter((prev) => prev ?? data[0]?.code.toLowerCase() ?? null);
+        setClientsStatus("ready");
+      })
+      .catch(() => {
+        if (!cancelled) setClientsStatus("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // LIVE_AGENT_IDS に含まれるエージェントのみ、実際にAgentCoreへ処理を依頼する。
   // それ以外は従来どおりのモック挙動(ランダムに完了/エラーへ遷移)のまま。
@@ -244,8 +268,7 @@ export default function AgentDispatchConsole() {
   };
 
   const startLive = async (id, ticket) => {
-    const client = CLIENTS.find((c) => c.id === ticket.clientId);
-    const prompt = `${client?.short}の領収書を整理して`;
+    const prompt = `${ticket.clientShort}の領収書を整理して`;
     try {
       const res = await fetch(`${API_BASE}/jobs`, {
         method: "POST",
@@ -321,23 +344,26 @@ export default function AgentDispatchConsole() {
           <div className="border-b border-[#E2E4E9] px-5 py-3">
             <span className="mb-2 block text-[10.5px] font-medium tracking-wide text-[#8A93A3]">クライアント</span>
             <div className="flex flex-wrap gap-1.5">
-              {CLIENTS.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => setClientFilter(c.id)}
-                  className="rounded-full border px-2.5 py-1 font-mono transition-all"
-                  style={{
-                    borderColor: clientFilter === c.id ? "#E8A33D" : "#E2E4E9",
-                    background: clientFilter === c.id ? "rgba(232,163,61,0.12)" : "transparent",
-                    color: clientFilter === c.id ? "#E8A33D" : "#6B7280",
-                    fontSize: clientFilter === c.id ? "15px" : "11px",
-                    fontWeight: clientFilter === c.id ? 700 : 400,
-                    padding: clientFilter === c.id ? "6px 14px" : "4px 10px",
-                  }}
-                >
-                  {`(${c.short})${c.full}`}
-                </button>
-              ))}
+              {clients.map((c) => {
+                const id = c.code.toLowerCase();
+                return (
+                  <button
+                    key={id}
+                    onClick={() => setClientFilter(id)}
+                    className="rounded-full border px-2.5 py-1 font-mono transition-all"
+                    style={{
+                      borderColor: clientFilter === id ? "#E8A33D" : "#E2E4E9",
+                      background: clientFilter === id ? "rgba(232,163,61,0.12)" : "transparent",
+                      color: clientFilter === id ? "#E8A33D" : "#6B7280",
+                      fontSize: clientFilter === id ? "15px" : "11px",
+                      fontWeight: clientFilter === id ? 700 : 400,
+                      padding: clientFilter === id ? "6px 14px" : "4px 10px",
+                    }}
+                  >
+                    {`(${c.code})${c.fullName}`}
+                  </button>
+                );
+              })}
             </div>
           </div>
           <div className="flex items-center justify-between border-b border-[#E2E4E9] px-5 py-3.5">
@@ -347,7 +373,13 @@ export default function AgentDispatchConsole() {
             <span className="font-mono text-[11px] text-[#8A93A3]">{visibleTickets.length} 件</span>
           </div>
           <div className="max-h-[560px] overflow-y-auto">
-            {visibleTickets.map((t) => (
+            {clientsStatus === "loading" && (
+              <div className="px-5 py-10 text-center text-[12px] text-[#8A93A3]">案件情報を読み込み中...</div>
+            )}
+            {clientsStatus === "error" && (
+              <div className="px-5 py-10 text-center text-[12px] text-[#D4634A]">案件情報の取得に失敗しました</div>
+            )}
+            {clientsStatus === "ready" && visibleTickets.map((t) => (
               <Ticket
                 key={t.id}
                 ticket={t}
@@ -356,7 +388,7 @@ export default function AgentDispatchConsole() {
                 onToggle={(id) => setExpandedId((prev) => (prev === id ? null : id))}
               />
             ))}
-            {visibleTickets.length === 0 && (
+            {clientsStatus === "ready" && visibleTickets.length === 0 && (
               <div className="px-5 py-10 text-center text-[12px] text-[#8A93A3]">このクライアントの指示はまだありません</div>
             )}
           </div>
