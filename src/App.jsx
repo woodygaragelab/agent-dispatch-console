@@ -26,7 +26,7 @@ const STATUS_STYLES = {
 const pad2 = (n) => String(n).padStart(2, "0");
 const formatNow = () => {
   const d = new Date();
-  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  return `${d.getFullYear()}/${pad2(d.getMonth() + 1)}/${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 };
 // 関与先(案件)とDriveフォルダIDのマスタは、DynamoDB (receipt-agent-clients
 // テーブル) を GET /clients で公開しているAPIから取得する。同じAPIを
