@@ -10,7 +10,7 @@ const MAX_POLL_ATTEMPTS = 100;
 
 const AGENTS = [
   { id: "scout", name: "受領", role: "情報収集・調査", instruction: "取引先から届いた見積書・請求書PDFをメールから取得し、案件フォルダに格納する", description: "取引先から届いた見積書・請求書PDFをメールから取得し、案件フォルダに格納する" },
-  { id: "archivist", name: "分類", role: "文書整理・分類", instruction: "領収書を分類してください", description: "receiptフォルダの新しい領収書画像を勘定科目ごとにリネーム・分類する" },
+  { id: "archivist", name: "分類", role: "文書整理・分類", instruction: "{clientShort}の領収書を整理して", description: "receiptフォルダの新しい領収書画像を勘定科目ごとにリネーム・分類する" },
   { id: "courier", name: "会計", role: "外部連携・送信", instruction: "領収書リストから仕訳データに変換する", description: "領収書リストから仕訳データに変換する" },
   { id: "auditor", name: "チェック", role: "検証・照合", instruction: "仕訳データの科目コードをマスタと照合する", description: "仕訳データの科目コードをマスタと照合する" },
   { id: "pinger", name: "疎通確認", role: "接続確認・監視", instruction: "会計システムAPIへの接続状態を確認し、応答時間を記録する", description: "会計システムAPIへの接続状態を確認し、応答時間を記録する" },
@@ -47,7 +47,7 @@ const buildTickets = (clients) =>
       clientId: c.code.toLowerCase(),
       clientShort: c.code,
       clientFull: c.fullName,
-      instruction: a.instruction,
+      instruction: a.instruction.replace("{clientShort}", c.code),
       description: a.description,
       status: "queued",
       startTime: null,
