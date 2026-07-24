@@ -9,11 +9,11 @@ const POLL_INTERVAL_MS = 3000;
 const MAX_POLL_ATTEMPTS = 100;
 
 const AGENTS = [
-  { id: "scout", name: "受領", role: "情報収集・調査", example: "取引先から届いた見積書・請求書PDFをメールから取得し、案件フォルダに格納する" },
-  { id: "archivist", name: "分類", role: "文書整理・分類", example: "receiptフォルダの新しい領収書画像を勘定科目ごとにリネーム・分類する" },
-  { id: "courier", name: "会計", role: "外部連携・送信", example: "領収書リストから仕訳データに変換する" },
-  { id: "auditor", name: "チェック", role: "検証・照合", example: "仕訳データの科目コードをマスタと照合する" },
-  { id: "pinger", name: "疎通確認", role: "接続確認・監視", example: "会計システムAPIへの接続状態を確認し、応答時間を記録する" },
+  { id: "scout", name: "受領", role: "情報収集・調査", instruction: "取引先から届いた見積書・請求書PDFをメールから取得し、案件フォルダに格納する" },
+  { id: "archivist", name: "分類", role: "文書整理・分類", instruction: "receiptフォルダの新しい領収書画像を勘定科目ごとにリネーム・分類する" },
+  { id: "courier", name: "会計", role: "外部連携・送信", instruction: "領収書リストから仕訳データに変換する" },
+  { id: "auditor", name: "チェック", role: "検証・照合", instruction: "仕訳データの科目コードをマスタと照合する" },
+  { id: "pinger", name: "疎通確認", role: "接続確認・監視", instruction: "会計システムAPIへの接続状態を確認し、応答時間を記録する" },
 ];
 
 const STATUS_STYLES = {
@@ -47,7 +47,7 @@ const buildTickets = (clients) =>
       clientId: c.code.toLowerCase(),
       clientShort: c.code,
       clientFull: c.fullName,
-      instruction: a.example,
+      instruction: a.instruction,
       status: "queued",
       startTime: null,
       endTime: null,
