@@ -269,7 +269,7 @@ export default function AgentDispatchConsole() {
   };
 
   const startLive = async (id, ticket) => {
-    const prompt = `${ticket.clientShort}の領収書を整理して`;
+    const prompt = ticket.instruction;
     try {
       const res = await fetch(`${API_BASE}/jobs`, {
         method: "POST",
